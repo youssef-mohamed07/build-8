@@ -25,13 +25,15 @@ export function AuthDevActions() {
     router.refresh();
   }
 
-  async function handleQuickLogin(founder: "youssef" | "saif") {
-    setLoading(founder);
-    const result = await quickLoginAction(founder);
+  async function handleQuickLogin(account: "youssef" | "saif" | "test") {
+    setLoading(account);
+    const result = await quickLoginAction(account);
     setLoading(null);
 
     if (result.success) {
-      navigateAfterAuth(`Welcome, ${FOUNDERS[founder].name}!`);
+      const name =
+        account === "test" ? "Test Admin" : FOUNDERS[account].name;
+      navigateAfterAuth(`Welcome, ${name}!`);
     } else {
       toast.error(result.error);
     }
@@ -43,7 +45,7 @@ export function AuthDevActions() {
     setLoading(null);
 
     if (result.success) {
-      navigateAfterAuth(`Welcome, ${FOUNDERS.youssef.name}!`);
+      navigateAfterAuth("Signed in — full app access enabled");
     } else {
       toast.error(result.error);
     }
@@ -54,7 +56,7 @@ export function AuthDevActions() {
       <p className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
         Quick access
       </p>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-3 gap-2">
         <Button
           type="button"
           variant="outline"
@@ -75,9 +77,19 @@ export function AuthDevActions() {
           <LogIn className="h-4 w-4" />
           {loading === "saif" ? "..." : FOUNDERS.saif.name}
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={!!loading}
+          onClick={() => handleQuickLogin("test")}
+        >
+          <LogIn className="h-4 w-4" />
+          {loading === "test" ? "..." : "Test"}
+        </Button>
       </div>
       <p className="text-center text-[11px] text-muted-foreground">
-        Password: Build8@2026
+        test@build8.com · Password: Build8@2026
       </p>
       <Button
         type="button"

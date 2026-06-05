@@ -15,11 +15,35 @@ async function clearSkipAuthCookie() {
   cookieStore.delete(SKIP_AUTH_COOKIE);
 }
 
+function loginErrorMessage(error: unknown): string {
+  if (error instanceof AuthError) {
+    return "Invalid email or password";
+  }
+
+  const message = error instanceof Error ? error.message : "";
+  if (/secret|configuration|AUTH_URL/i.test(message)) {
+    return "Auth is not configured on the server. Set AUTH_SECRET on Vercel.";
+  }
+
+  if (/database|prisma|connect/i.test(message)) {
+    return "Database connection failed. Check DATABASE_URL on Vercel.";
+  }
+
+  return "Sign in failed. Try Skip auth or check server environment variables.";
+}
+
 export async function loginAction(
   email: string,
   password: string
 ): Promise<ActionResult> {
   try {
+    if (!process.env.AUTH_SECRET) {
+      return {
+        success: false,
+        error: "AUTH_SECRET is missing. Add it in Vercel → Settings → Environment Variables.",
+      };
+    }
+
     await signIn("credentials", {
       email,
       password,
@@ -28,10 +52,8 @@ export async function loginAction(
     await clearSkipAuthCookie();
     return { success: true, data: undefined };
   } catch (error) {
-    if (error instanceof AuthError) {
-      return { success: false, error: "Invalid email or password" };
-    }
-    throw error;
+    console.error("[loginAction]", error);
+    return { success: false, error: loginErrorMessage(error) };
   }
 }
 
@@ -49,14 +71,21 @@ async function signInFounder(founder: "youssef" | "saif"): Promise<ActionResult>
 }
 
 export async function quickLoginAction(
-  founder: "youssef" | "saif"
+  account: "youssef" | "saif" | "test"
 ): Promise<ActionResult> {
-  return signInFounder(founder);
+  if (account === "test") {
+    return loginAction("test@build8.com", DEV_PASSWORD);
+  }
+  return signInFounder(account);
 }
 
 export async function skipAuthAction(): Promise<ActionResult> {
-  const loginResult = await signInFounder("youssef");
-  if (loginResult.success) return loginResult;
+  try {
+    const loginResult = await signInFounder("youssef");
+    if (loginResult.success) return loginResult;
+  } catch (error) {
+    console.error("[skipAuthAction] founder login failed", error);
+  }
 
   const cookieStore = await cookies();
   cookieStore.set(SKIP_AUTH_COOKIE, "1", {
