@@ -41,11 +41,8 @@ AUTH_URL="http://localhost:3000"
 # Generate Prisma client
 npx prisma generate
 
-# Run migrations
-npx prisma migrate dev --name init
-
-# Seed database
-npx prisma db seed
+# Sync schema + seed (safe for existing Supabase DB)
+npm run db:setup
 
 # Start dev server
 npm run dev
@@ -58,11 +55,17 @@ Login with: `youssef@build8.com` or `saif@build8.com` / `Build8@2026`
 ### Migrations
 
 ```bash
-# Development
-npx prisma migrate dev
+# Development — sync schema without resetting data
+npm run db:setup
 
-# Production
-npx prisma migrate deploy
+# Production — apply migration history
+npm run db:deploy
+```
+
+If you previously used `prisma db push` and see drift errors, baseline once:
+
+```bash
+npm run db:baseline
 ```
 
 ### Seed (first deploy only)
