@@ -80,9 +80,24 @@ npx prisma db seed
 
 1. Push code to GitHub
 2. Import project in Vercel
-3. Set environment variables
-4. Use Vercel Postgres or external PostgreSQL (Neon, Supabase, Railway)
+3. Set environment variables for **Production** (not Preview only)
+4. Use Supabase PostgreSQL (same project as local `.env`)
 5. Deploy
+6. Seed the **same** database Vercel uses:
+
+```bash
+# Local machine — .env must match Vercel DATABASE_URL / DIRECT_URL
+npm run db:setup
+npm run db:status
+```
+
+7. Verify production:
+
+```bash
+curl https://system.build8.dev/api/health
+```
+
+You should see `userCount` > 0 and founder emails listed. If `userCount` is 0, Vercel is pointing at a different or empty database.
 
 ```bash
 # vercel.json (optional)

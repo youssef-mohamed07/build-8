@@ -6,8 +6,19 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+function normalizeDatabaseUrl(url: string): string {
+  if (
+    url.includes("pooler.supabase.com:6543") &&
+    !url.includes("pgbouncer=true")
+  ) {
+    const separator = url.includes("?") ? "&" : "?";
+    return `${url}${separator}pgbouncer=true`;
+  }
+  return url;
+}
+
 function createPrismaClient() {
-  const connectionString = process.env.DATABASE_URL!;
+  const connectionString = normalizeDatabaseUrl(process.env.DATABASE_URL!);
   const adapter = new PrismaPg({
     connectionString,
     ...(connectionString.includes("supabase")

@@ -66,7 +66,7 @@ async function signInFounder(founder: "youssef" | "saif"): Promise<ActionResult>
 
   return {
     success: false,
-    error: `${account.name} account not found. Run npm run db:seed first.`,
+    error: `${account.name} not found in this database. Run npm run db:setup locally using the same DATABASE_URL as Vercel, then check https://system.build8.dev/api/health`,
   };
 }
 
