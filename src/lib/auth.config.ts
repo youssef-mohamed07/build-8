@@ -28,7 +28,12 @@ export const authConfig: NextAuthConfig = {
       }
 
       if (!isLoggedIn) {
-        return Response.redirect(new URL("/login", nextUrl));
+        const loginUrl = new URL("/login", nextUrl);
+        const callback = nextUrl.pathname + nextUrl.search;
+        if (callback && callback !== "/") {
+          loginUrl.searchParams.set("callbackUrl", callback);
+        }
+        return Response.redirect(loginUrl);
       }
 
       return true;

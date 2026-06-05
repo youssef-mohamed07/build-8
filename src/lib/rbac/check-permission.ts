@@ -1,16 +1,25 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { FOUNDERS } from "@/lib/founders";
 import {
   devPermissions,
   getDevSessionUser,
   isAuthSkipped,
 } from "@/lib/skip-auth";
+
+const founderEmails = [...FOUNDERS.youssef.emails, ...FOUNDERS.saif.emails];
 import type { Permission } from "./permissions";
 
 async function getSkipAuthUser() {
   try {
     const user = await prisma.user.findFirst({
-      where: { status: "ACTIVE" },
+      where: {
+        status: "ACTIVE",
+        OR: [
+          { email: { in: founderEmails } },
+          { founderId: { not: null } },
+        ],
+      },
       include: {
         role: {
           include: {

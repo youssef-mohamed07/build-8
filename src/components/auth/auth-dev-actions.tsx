@@ -8,10 +8,22 @@ import { Button } from "@/components/ui/button";
 import { FOUNDERS } from "@/lib/founders";
 import { quickLoginAction, skipAuthAction } from "@/server/actions/auth.actions";
 
+function resolveCallbackUrl(): string {
+  if (typeof window === "undefined") return "/dashboard";
+  const callback = new URLSearchParams(window.location.search).get("callbackUrl");
+  if (callback?.startsWith("/") && !callback.startsWith("//")) return callback;
+  return "/dashboard";
+}
+
 export function AuthDevActions() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
-  const isDev = process.env.NODE_ENV !== "production";
+
+  function navigateAfterAuth(message: string) {
+    toast.success(message);
+    router.push(resolveCallbackUrl());
+    router.refresh();
+  }
 
   async function handleQuickLogin(founder: "youssef" | "saif") {
     setLoading(founder);
@@ -19,9 +31,7 @@ export function AuthDevActions() {
     setLoading(null);
 
     if (result.success) {
-      toast.success(`Welcome, ${FOUNDERS[founder].name}!`);
-      router.push("/dashboard");
-      router.refresh();
+      navigateAfterAuth(`Welcome, ${FOUNDERS[founder].name}!`);
     } else {
       toast.error(result.error);
     }
@@ -33,9 +43,7 @@ export function AuthDevActions() {
     setLoading(null);
 
     if (result.success) {
-      toast.success("Auth skipped — dev mode");
-      router.push("/dashboard");
-      router.refresh();
+      navigateAfterAuth(`Welcome, ${FOUNDERS.youssef.name}!`);
     } else {
       toast.error(result.error);
     }
@@ -44,37 +52,33 @@ export function AuthDevActions() {
   return (
     <div className="mt-6 space-y-3 border-t border-border pt-6">
       <p className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        {isDev ? "Dev access" : "Quick access"}
+        Quick access
       </p>
-      {isDev && (
-        <>
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={!!loading}
-              onClick={() => handleQuickLogin("youssef")}
-            >
-              <LogIn className="h-4 w-4" />
-              {loading === "youssef" ? "..." : FOUNDERS.youssef.name}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={!!loading}
-              onClick={() => handleQuickLogin("saif")}
-            >
-              <LogIn className="h-4 w-4" />
-              {loading === "saif" ? "..." : FOUNDERS.saif.name}
-            </Button>
-          </div>
-          <p className="text-center text-[11px] text-muted-foreground">
-            Password: {FOUNDERS.youssef.name} / {FOUNDERS.saif.name} → Build8@2026
-          </p>
-        </>
-      )}
+      <div className="grid grid-cols-2 gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={!!loading}
+          onClick={() => handleQuickLogin("youssef")}
+        >
+          <LogIn className="h-4 w-4" />
+          {loading === "youssef" ? "..." : FOUNDERS.youssef.name}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={!!loading}
+          onClick={() => handleQuickLogin("saif")}
+        >
+          <LogIn className="h-4 w-4" />
+          {loading === "saif" ? "..." : FOUNDERS.saif.name}
+        </Button>
+      </div>
+      <p className="text-center text-[11px] text-muted-foreground">
+        Password: Build8@2026
+      </p>
       <Button
         type="button"
         variant="secondary"

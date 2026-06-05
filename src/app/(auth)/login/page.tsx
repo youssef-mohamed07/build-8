@@ -34,7 +34,10 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result.success) {
-      router.push("/dashboard");
+      const callback = new URLSearchParams(window.location.search).get("callbackUrl");
+      const destination =
+        callback?.startsWith("/") && !callback.startsWith("//") ? callback : "/dashboard";
+      router.push(destination);
       router.refresh();
     } else {
       toast.error(result.error);

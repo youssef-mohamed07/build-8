@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { signIn, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { FOUNDERS, DEV_PASSWORD } from "@/lib/founders";
-import { SKIP_AUTH_COOKIE, isDevAuthEnabled } from "@/lib/skip-auth";
+import { SKIP_AUTH_COOKIE } from "@/lib/skip-auth";
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import type { ActionResult } from "@/types";
@@ -35,13 +35,7 @@ export async function loginAction(
   }
 }
 
-export async function quickLoginAction(
-  founder: "youssef" | "saif"
-): Promise<ActionResult> {
-  if (!isDevAuthEnabled()) {
-    return { success: false, error: "Not available in production" };
-  }
-
+async function signInFounder(founder: "youssef" | "saif"): Promise<ActionResult> {
   const account = FOUNDERS[founder];
   for (const email of account.emails) {
     const result = await loginAction(email, DEV_PASSWORD);
@@ -54,7 +48,16 @@ export async function quickLoginAction(
   };
 }
 
+export async function quickLoginAction(
+  founder: "youssef" | "saif"
+): Promise<ActionResult> {
+  return signInFounder(founder);
+}
+
 export async function skipAuthAction(): Promise<ActionResult> {
+  const loginResult = await signInFounder("youssef");
+  if (loginResult.success) return loginResult;
+
   const cookieStore = await cookies();
   cookieStore.set(SKIP_AUTH_COOKIE, "1", {
     httpOnly: true,
