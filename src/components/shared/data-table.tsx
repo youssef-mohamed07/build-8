@@ -1,10 +1,8 @@
-"use client";
-
 import { ReactNode } from "react";
-import { useRouter } from "next/navigation";
 import { Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/shared/empty-state";
+import { DataTableBody } from "@/components/shared/data-table-body";
 
 interface Column<T> {
   key: string;
@@ -22,8 +20,6 @@ interface DataTableProps<T> {
   emptyDescription?: string;
 }
 
-const NON_CLICKABLE_COLUMNS = new Set(["actions"]);
-
 export function DataTable<T>({
   columns,
   data,
@@ -32,8 +28,6 @@ export function DataTable<T>({
   emptyTitle = "No records found",
   emptyDescription = "Try adjusting your search or add a new record.",
 }: DataTableProps<T>) {
-  const router = useRouter();
-
   if (data.length === 0) {
     return (
       <div className="rounded-xl border border-border">
@@ -42,10 +36,7 @@ export function DataTable<T>({
     );
   }
 
-  function handleRowClick(item: T) {
-    const href = rowHref?.(item);
-    if (href) router.push(href);
-  }
+  const rowHrefs = rowHref ? data.map((item) => rowHref(item)) : undefined;
 
   return (
     <div className="rounded-xl border border-border overflow-hidden">
@@ -65,28 +56,27 @@ export function DataTable<T>({
             ))}
           </tr>
         </thead>
-        <tbody>
-          {data.map((item) => (
+        <DataTableBody rowHrefs={rowHrefs}>
+          {data.map((item, index) => (
             <tr
               key={keyExtractor(item)}
-              onClick={() => handleRowClick(item)}
+              data-row-index={index}
               className={cn(
-                "border-b border-border last:border-0 transition-colors",
-                rowHref ? "cursor-pointer hover:bg-muted/30" : "hover:bg-muted/30"
+                "border-b border-border last:border-0 transition-colors hover:bg-muted/30",
+                rowHref && "cursor-pointer"
               )}
             >
               {columns.map((col) => (
                 <td
                   key={col.key}
                   className={cn("px-4 py-3", col.className)}
-                  onClick={NON_CLICKABLE_COLUMNS.has(col.key) ? (e) => e.stopPropagation() : undefined}
                 >
                   {col.cell(item)}
                 </td>
               ))}
             </tr>
           ))}
-        </tbody>
+        </DataTableBody>
       </table>
     </div>
   );
