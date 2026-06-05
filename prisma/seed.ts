@@ -147,13 +147,40 @@ async function main() {
     },
   });
 
+  const TEST_ADMIN = {
+    email: "test@build8.com",
+    name: "Test Admin",
+  };
+
   const founderEmails = [...FOUNDERS.youssef.emails, ...FOUNDERS.saif.emails];
   await prisma.user.updateMany({
     where: {
-      email: { notIn: founderEmails },
+      email: { notIn: [...founderEmails, TEST_ADMIN.email] },
       founderId: null,
     },
     data: { status: "INACTIVE" },
+  });
+
+  const adminRole = await prisma.role.findUnique({
+    where: { slug: ROLES.ADMIN },
+  });
+  if (!adminRole) throw new Error("Admin role not found");
+
+  await prisma.user.upsert({
+    where: { email: TEST_ADMIN.email },
+    update: {
+      name: TEST_ADMIN.name,
+      passwordHash,
+      roleId: adminRole.id,
+      status: "ACTIVE",
+    },
+    create: {
+      email: TEST_ADMIN.email,
+      name: TEST_ADMIN.name,
+      passwordHash,
+      roleId: adminRole.id,
+      status: "ACTIVE",
+    },
   });
 
   // Company settings
@@ -192,6 +219,7 @@ async function main() {
   console.log("Login credentials:");
   console.log(`  ${FOUNDERS.youssef.primaryEmail} / ${DEV_PASSWORD}`);
   console.log(`  ${FOUNDERS.saif.primaryEmail} / ${DEV_PASSWORD}`);
+  console.log(`  ${TEST_ADMIN.email} / ${DEV_PASSWORD} (admin)`);
 }
 
 main()
