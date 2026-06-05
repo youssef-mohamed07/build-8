@@ -55,14 +55,11 @@ export async function quickLoginAction(
 }
 
 export async function skipAuthAction(): Promise<ActionResult> {
-  if (!isDevAuthEnabled()) {
-    return { success: false, error: "Not available in production" };
-  }
-
   const cookieStore = await cookies();
   cookieStore.set(SKIP_AUTH_COOKIE, "1", {
     httpOnly: true,
     sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
@@ -92,7 +89,8 @@ export async function forgotPasswordAction(
     data: { identifier: email, token, expires },
   });
 
-  const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/reset-password?token=${token}`;
+  const { resolveAppUrl } = await import("@/lib/app-url");
+  const resetUrl = `${resolveAppUrl()}/reset-password?token=${token}`;
   if (process.env.NODE_ENV === "development") {
     console.log(`[dev] Password reset link for ${email}: ${resetUrl}`);
   }

@@ -9,18 +9,19 @@ export function isDevAuthEnabled(): boolean {
 }
 
 export function isEnvSkipEnabled(): boolean {
-  return process.env.SKIP_AUTH === "true";
+  return (
+    process.env.SKIP_AUTH === "true" ||
+    process.env.NEXT_PUBLIC_SKIP_AUTH === "true"
+  );
 }
 
 export function isAuthSkippedFromCookie(cookieValue?: string): boolean {
   if (isEnvSkipEnabled()) return true;
-  if (!isDevAuthEnabled()) return false;
   return cookieValue === "1";
 }
 
 export async function isAuthSkipped(): Promise<boolean> {
   if (isEnvSkipEnabled()) return true;
-  if (!isDevAuthEnabled()) return false;
   const cookieStore = await cookies();
   return cookieStore.get(SKIP_AUTH_COOKIE)?.value === "1";
 }
